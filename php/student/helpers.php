@@ -14,12 +14,12 @@ function db_connect() {
 
 function require_student_session() {
     session_start();
-    if (empty($_SESSION['student_id'])) {
+    if (empty($_SESSION['user_id'])) {
         http_response_code(401);
-        echo json_encode(['error' => 'Authentication required']);
+        echo json_encode(['error' => 'Authentication required. Please log in again.']);
         exit;
     }
-    return $_SESSION['student_id'];
+    return $_SESSION['user_id'];
 }
 
 function send_json($data, int $code = 200) {
