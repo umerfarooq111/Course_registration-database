@@ -21,7 +21,7 @@ try {
         FROM Course_Section cs
         JOIN Course c ON cs.course_id = c.course_id
         LEFT JOIN Instructor i ON cs.instructor_id = i.instructor_id
-        ORDER BY c.title, cs.section_id
+        ORDER BY c.course_id ASC, cs.section_id ASC
     ";
 
     $result = $conn->query($query);

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body style="background: #eef2f5;">
+    <div class="container" style="max-width: 1400px; display: flex; padding: 0; background: transparent; box-shadow: none;">
+        
+        <!-- Sidebar -->
+        <aside style="width: 250px; background: #2c3e50; color: white; min-height: 100vh; padding: 20px; border-radius: 8px 0 0 8px;">
+            <h2 style="color: #fff; margin-bottom: 40px; font-size: 1.5em; border-bottom: 1px solid #34495e; padding-bottom: 15px;">Admin Control</h2>
+            <ul style="list-style: none; padding: 0;" id="tab-links">
+                <li style="margin-bottom: 15px;"><a href="#" onclick="switchTab('courses')" style="color: #ecf0f1; text-decoration: none; font-size: 1.1em;">📚 Manage Courses</a></li>
+                <li style="margin-bottom: 15px;"><a href="#" onclick="switchTab('students')" style="color: #bdc3c7; text-decoration: none; font-size: 1.1em;">🎓 Manage Students</a></li>
+                <li style="margin-bottom: 15px;"><a href="#" onclick="switchTab('instructors')" style="color: #bdc3c7; text-decoration: none; font-size: 1.1em;">👨‍🏫 Manage Instructors</a></li>
+                <li style="margin-bottom: 30px;"><a href="#" onclick="switchTab('departments')" style="color: #bdc3c7; text-decoration: none; font-size: 1.1em;">🏛 Manage Departments</a></li>
+            </ul>
+            <a href="php/admin/logout.php" style="color: #e74c3c; text-decoration: none; font-weight: bold; border: 1px solid #e74c3c; padding: 8px 12px; border-radius: 4px; display: inline-block; text-align: center; width: 100%; box-sizing:border-box;">Logout</a>
+        </aside>
+
+        <!-- Main Content -->
+        <main style="flex: 1; background: white; padding: 30px; border-radius: 0 8px 8px 0; box-shadow: 0 0 15px rgba(0,0,0,0.05);">
+            
+            <section id="tab-courses">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h2>Course Management</h2>
+                    <button onclick="openCourseModal()" style="background: #27ae60; padding: 10px 15px; font-size: 1em;">+ Add New Course</button>
+                </div>
+                <div id="course-list-container" style="margin-top: 20px;"></div>
+            </section>
+
+            <section id="tab-students" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h2>Student Management</h2>
+                    <button onclick="openStudentModal()" style="background: #27ae60; padding: 10px 15px; font-size: 1em;">+ Add New Student</button>
+                </div>
+                <div id="student-list-container" style="margin-top: 20px;"></div>
+            </section>
+
+            <section id="tab-instructors" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h2>Instructor Management</h2>
+                    <button onclick="openInstructorModal()" style="background: #27ae60; padding: 10px 15px; font-size: 1em;">+ Add New Instructor</button>
+                </div>
+                <div id="instructor-list-container" style="margin-top: 20px;"></div>
+            </section>
+
+            <section id="tab-departments" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h2>Department Management</h2>
+                    <button onclick="openDeptModal()" style="background: #27ae60; padding: 10px 15px; font-size: 1em;">+ Add Department</button>
+                </div>
+                <div id="dept-list-container" style="margin-top: 20px;"></div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Modals -->
+
+    <!-- Course Modal -->
+    <div id="course-modal" class="modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); align-items:center; justify-content:center;">
+        <div style="background:white; padding: 30px; border-radius: 8px; width: 400px;">
+            <h3 id="c-modal-title" style="margin-top: 0;">Add Course</h3>
+            <input type="hidden" id="c_id">
+            <div class="form-group"><label>Title</label><input type="text" id="c_title" class="form-control" required></div>
+            <div class="form-group"><label>Credits</label><input type="number" id="c_credits" class="form-control" min="1" required></div>
+            <div class="form-group"><label>Max Capacity</label><input type="number" id="c_capacity" class="form-control" min="1" required></div>
+            <div class="form-group"><label>Department ID</label><input type="number" id="c_dept" class="form-control" required></div>
+            <div style="display:flex; justify-content: space-between; margin-top: 20px;">
+                <button onclick="closeModal('course-modal')" style="background: #95a5a6;">Cancel</button>
+                <button onclick="saveCourse()" style="background: #2980b9;">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Modal -->
+    <div id="student-modal" class="modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); align-items:center; justify-content:center;">
+        <div style="background:white; padding: 30px; border-radius: 8px; width: 400px; max-height: 90vh; overflow-y:auto;">
+            <h3 id="s-modal-title" style="margin-top: 0;">Add Student</h3>
+            <input type="hidden" id="s_id">
+            <div class="form-group"><label>Full Name</label><input type="text" id="s_name" class="form-control" required></div>
+            <div class="form-group"><label>Email</label><input type="email" id="s_email" class="form-control" required></div>
+            <div class="form-group"><label>Phone</label><input type="text" id="s_phone" class="form-control"></div>
+            <div class="form-group"><label>Password (Leave blank to keep current)</label><input type="text" id="s_password" class="form-control"></div>
+            <div class="form-group">
+                <label>Status</label>
+                <select id="s_status" class="form-control">
+                    <option value="CURRENT">CURRENT</option>
+                    <option value="GRADUATED">GRADUATED</option>
+                    <option value="DROPPED">DROPPED</option>
+                    <option value="SUSPENDED">SUSPENDED</option>
+                </select>
+            </div>
+            <div style="display:flex; justify-content: space-between; margin-top: 20px;">
+                <button onclick="closeModal('student-modal')" style="background: #95a5a6;">Cancel</button>
+                <button onclick="saveStudent()" style="background: #2980b9;">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Instructor Modal -->
+    <div id="instructor-modal" class="modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); align-items:center; justify-content:center;">
+        <div style="background:white; padding: 30px; border-radius: 8px; width: 400px;">
+            <h3 id="i-modal-title" style="margin-top: 0;">Add Instructor</h3>
+            <input type="hidden" id="i_id">
+            <div class="form-group"><label>Name</label><input type="text" id="i_name" class="form-control" required></div>
+            <div class="form-group"><label>Email</label><input type="email" id="i_email" class="form-control" required></div>
+            <div class="form-group"><label>Department ID</label><input type="number" id="i_dept" class="form-control" required></div>
+            <div style="display:flex; justify-content: space-between; margin-top: 20px;">
+                <button onclick="closeModal('instructor-modal')" style="background: #95a5a6;">Cancel</button>
+                <button onclick="saveInstructor()" style="background: #2980b9;">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Department Modal -->
+    <div id="dept-modal" class="modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); align-items:center; justify-content:center;">
+        <div style="background:white; padding: 30px; border-radius: 8px; width: 400px;">
+            <h3 id="d-modal-title" style="margin-top: 0;">Add Department</h3>
+            <input type="hidden" id="d_id">
+            <div class="form-group"><label>Department Name</label><input type="text" id="d_name" class="form-control" required></div>
+            <div style="display:flex; justify-content: space-between; margin-top: 20px;">
+                <button onclick="closeModal('dept-modal')" style="background: #95a5a6;">Cancel</button>
+                <button onclick="saveDept()" style="background: #2980b9;">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/admin.js"></script>
+</body>
+</html>

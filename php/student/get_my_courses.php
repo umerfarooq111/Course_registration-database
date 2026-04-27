@@ -19,7 +19,7 @@ try {
          JOIN Course c ON cs.course_id = c.course_id
          LEFT JOIN Instructor i ON cs.instructor_id = i.instructor_id
          WHERE r.student_id = ?
-         ORDER BY FIELD(r.status, "REGISTERED", "DROPPED"), c.title'
+         ORDER BY FIELD(r.status, "REGISTERED", "DROPPED"), c.course_id ASC'
     );
     $stmt->bind_param('i', $studentId);
     $stmt->execute();

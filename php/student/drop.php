@@ -30,7 +30,7 @@ try {
     }
 
     $updateReg = $conn->prepare(
-        'UPDATE Registration SET status = "dropped", dropped_at = NOW() WHERE registration_id = ?'
+        'UPDATE Registration SET status = "DROPPED", drop_at = NOW() WHERE registration_id = ?'
     );
     $updateReg->bind_param('i', $registration['registration_id']);
     $updateReg->execute();

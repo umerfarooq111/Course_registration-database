@@ -6,7 +6,7 @@ async function loadAvailableCourses() {
         const response = await fetch('php/get_courses.php');
         if (!response.ok) throw new Error('Failed to fetch courses');
         const data = await response.json();
-        
+
         courses = data.map(course => ({
             id: parseInt(course.section_id),
             course_id: parseInt(course.course_id),
@@ -18,7 +18,7 @@ async function loadAvailableCourses() {
             capacity: parseInt(course.max_capacity),
             enrolled: parseInt(course.enrollment_count)
         }));
-        
+
         renderCourses();
     } catch (error) {
         console.error('Error:', error);
@@ -37,7 +37,7 @@ async function loadEnrolledCourses() {
             throw new Error('Failed to fetch enrolled courses');
         }
         const data = await response.json();
-        
+
         enrolledCourses = data.map(course => ({
             id: parseInt(course.section_id),
             code: 'CRS-' + course.section_id,
@@ -45,7 +45,7 @@ async function loadEnrolledCourses() {
             credits: parseInt(course.credit_hr),
             status: course.status
         }));
-        
+
         renderEnrolled();
         renderCourses(); // Re-render available courses to update button states
     } catch (error) {
@@ -71,13 +71,13 @@ function renderCourses() {
             </thead>
             <tbody>
                 ${courses.map(course => {
-                    // Check if already registered
-                    const isEnrolled = enrolledCourses.some(e => e.id === course.id && e.status === 'REGISTERED');
-                    const isFull = course.enrolled >= course.capacity;
-                    let btnDisabled = isEnrolled || isFull ? 'disabled' : '';
-                    let btnText = isEnrolled ? 'Enrolled' : (isFull ? 'Full' : 'Register');
-                    
-                    return `
+        // Check if already registered
+        const isEnrolled = enrolledCourses.some(e => e.id === course.id && e.status === 'REGISTERED');
+        const isFull = course.enrolled >= course.capacity;
+        let btnDisabled = isEnrolled || isFull ? 'disabled' : '';
+        let btnText = isEnrolled ? 'Enrolled' : (isFull ? 'Full' : 'Register');
+
+        return `
                     <tr>
                         <td>${course.code}</td>
                         <td>${course.title}</td>
@@ -101,7 +101,7 @@ function renderEnrolled() {
     const container = document.getElementById('enrolled');
     // Only show active courses
     const activeEnrolled = enrolledCourses.filter(c => c.status === 'REGISTERED');
-    
+
     if (activeEnrolled.length === 0) {
         container.innerHTML = '<p>No active courses registered yet.</p>';
         return;
@@ -139,19 +139,19 @@ async function enroll(sectionId) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ section_id: sectionId })
         });
-        
+
         const result = await response.json();
-        
+
         if (!response.ok) {
             alert(result.error || 'Failed to enroll');
             return;
         }
-        
+
         alert(result.message || 'Successfully enrolled!');
         // Refresh data dynamically
         await loadAvailableCourses();
         await loadEnrolledCourses();
-        
+
     } catch (error) {
         console.error('Enroll Error:', error);
         alert('An error occurred while enrolling.');
@@ -160,26 +160,26 @@ async function enroll(sectionId) {
 
 async function drop(sectionId) {
     if (!confirm('Are you sure you want to drop this course?')) return;
-    
+
     try {
         const response = await fetch('php/student/drop.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ section_id: sectionId })
         });
-        
+
         const result = await response.json();
-        
+
         if (!response.ok) {
             alert(result.error || 'Failed to drop course');
             return;
         }
-        
+
         alert(result.message || 'Course dropped successfully!');
         // Refresh data dynamically
         await loadAvailableCourses();
         await loadEnrolledCourses();
-        
+
     } catch (error) {
         console.error('Drop Error:', error);
         alert('An error occurred while dropping the course.');
