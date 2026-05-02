@@ -8,6 +8,7 @@ function switchTab(tabName) {
     document.getElementById('tab-students').style.display = 'none';
     document.getElementById('tab-instructors').style.display = 'none';
     document.getElementById('tab-departments').style.display = 'none';
+    document.getElementById('tab-offerings').style.display = 'none';
     
     document.getElementById('tab-' + tabName).style.display = 'block';
     
@@ -37,11 +38,13 @@ async function loadCourses() {
             adminCourses = data;
             const list = document.getElementById('course-list-container');
             if(adminCourses.length === 0) { list.innerHTML = '<p>No courses found.</p>'; return; }
-            let html = `<table><thead><tr><th>ID</th><th>Course Title</th><th>Department</th><th>Credits</th><th>Capacity</th><th>Actions</th></tr></thead><tbody>`;
+            let html = `<table><thead><tr><th>ID</th><th>Course Title</th><th>Type</th><th>Prereq ID</th><th>Department</th><th>Credits</th><th>Capacity</th><th>Actions</th></tr></thead><tbody>`;
             adminCourses.forEach(c => {
                 html += `<tr>
                     <td>${c.course_id}</td>
                     <td><strong>${c.title}</strong></td>
+                    <td>${c.course_type}</td>
+                    <td>${c.prereq_id || 'None'}</td>
                     <td>${c.department_name} (ID: ${c.department_id})</td>
                     <td>${c.credit_hr}</td>
                     <td>${c.max_capacity}</td>
@@ -63,6 +66,8 @@ function openCourseModal() {
     document.getElementById('c_credits').value = '';
     document.getElementById('c_capacity').value = '';
     document.getElementById('c_dept').value = '';
+    document.getElementById('c_type').value = 'Core';
+    document.getElementById('c_prereq').value = '';
     document.getElementById('course-modal').style.display = 'flex';
 }
 
@@ -74,6 +79,8 @@ function editCourse(dataJSON) {
     document.getElementById('c_credits').value = c.credit_hr;
     document.getElementById('c_capacity').value = c.max_capacity;
     document.getElementById('c_dept').value = c.department_id;
+    document.getElementById('c_type').value = c.course_type;
+    document.getElementById('c_prereq').value = c.prereq_id || '';
     document.getElementById('course-modal').style.display = 'flex';
 }
 
@@ -83,7 +90,9 @@ async function saveCourse() {
         title: document.getElementById('c_title').value,
         credit_hr: document.getElementById('c_credits').value,
         max_capacity: document.getElementById('c_capacity').value,
-        department_id: document.getElementById('c_dept').value
+        department_id: document.getElementById('c_dept').value,
+        course_type: document.getElementById('c_type').value,
+        prereq_id: document.getElementById('c_prereq').value || 0
     };
     if (id !== '') payload.course_id = id;
     
@@ -109,14 +118,16 @@ async function loadStudents() {
             adminStudents = data;
             const list = document.getElementById('student-list-container');
             if(adminStudents.length === 0) { list.innerHTML = '<p>No students found.</p>'; return; }
-            let html = `<table><thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Status</th><th>Password (db)</th><th>Actions</th></tr></thead><tbody>`;
+            let html = `<table><thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Status</th><th>Semester</th><th>CGPA</th><th>Cr. Compl.</th><th>Actions</th></tr></thead><tbody>`;
             adminStudents.forEach(s => {
                 html += `<tr>
                     <td>STD-${s.student_id}</td>
                     <td><strong>${s.name}</strong></td>
                     <td>${s.email}</td>
                     <td>${s.status}</td>
-                    <td>${s.password}</td>
+                    <td>${s.semester}</td>
+                    <td>${s.cgpa}</td>
+                    <td>${s.credits_completed}</td>
                     <td>
                         <button onclick="editStudent('${escapeHtml(s)}')" style="background:#f39c12; margin-right: 5px;">Edit</button>
                         <button onclick="deleteStudent(${s.student_id})" style="background:#c0392b;">Delete</button>
@@ -136,6 +147,9 @@ function openStudentModal() {
     document.getElementById('s_phone').value = '';
     document.getElementById('s_password').value = '';
     document.getElementById('s_status').value = 'CURRENT';
+    document.getElementById('s_semester').value = 1;
+    document.getElementById('s_cgpa').value = 0.00;
+    document.getElementById('s_credits').value = 0;
     document.getElementById('student-modal').style.display = 'flex';
 }
 
@@ -148,6 +162,9 @@ function editStudent(dataJSON) {
     document.getElementById('s_phone').value = s.phone_no || '';
     document.getElementById('s_password').value = ''; // leave blank by default
     document.getElementById('s_status').value = s.status;
+    document.getElementById('s_semester').value = s.semester || 1;
+    document.getElementById('s_cgpa').value = s.cgpa || 0.00;
+    document.getElementById('s_credits').value = s.credits_completed || 0;
     document.getElementById('student-modal').style.display = 'flex';
 }
 
@@ -158,7 +175,10 @@ async function saveStudent() {
         email: document.getElementById('s_email').value,
         phone_no: document.getElementById('s_phone').value,
         password: document.getElementById('s_password').value,
-        status: document.getElementById('s_status').value
+        status: document.getElementById('s_status').value,
+        semester: document.getElementById('s_semester').value,
+        cgpa: document.getElementById('s_cgpa').value,
+        credits_completed: document.getElementById('s_credits').value
     };
     if (id !== '') payload.student_id = id;
     
@@ -301,8 +321,72 @@ async function deleteDept(id) {
     if (res.ok) loadDepartments(); else alert((await res.json()).error);
 }
 
+/* ================= OFFERINGS ================= */
+async function loadOfferings() {
+    try {
+        const res = await fetch('php/admin/offerings.php');
+        const data = await res.json();
+        if (res.ok) {
+            const list = document.getElementById('offering-list-container');
+            if(data.length === 0) { list.innerHTML = '<p>No offerings found.</p>'; return; }
+            let html = `<table><thead><tr><th>Offering ID</th><th>Course ID</th><th>Semester/Batch</th><th>Actions</th></tr></thead><tbody>`;
+            data.forEach(o => {
+                html += `<tr>
+                    <td>${o.offering_id}</td>
+                    <td>${o.course_id} - ${o.title}</td>
+                    <td>Semester ${o.semester}</td>
+                    <td>
+                        <button onclick="editOffering('${escapeHtml(o)}')" style="background:#f39c12; margin-right: 5px;">Edit</button>
+                        <button onclick="deleteOffering(${o.offering_id})" style="background:#c0392b;">Delete</button>
+                    </td>
+                </tr>`;
+            });
+            list.innerHTML = html + `</tbody></table>`;
+        }
+    } catch(e) { console.error(e); }
+}
+
+function openOfferingModal() {
+    document.getElementById('o-modal-title').innerText = 'Add Course Offering';
+    document.getElementById('o_id').value = '';
+    document.getElementById('o_course').value = '';
+    document.getElementById('o_semester').value = '';
+    document.getElementById('offering-modal').style.display = 'flex';
+}
+
+function editOffering(dataJSON) {
+    const o = JSON.parse(dataJSON);
+    document.getElementById('o-modal-title').innerText = 'Edit Course Offering';
+    document.getElementById('o_id').value = o.offering_id;
+    document.getElementById('o_course').value = o.course_id;
+    document.getElementById('o_semester').value = o.semester;
+    document.getElementById('offering-modal').style.display = 'flex';
+}
+
+async function saveOffering() {
+    const id = document.getElementById('o_id').value;
+    const payload = { 
+        course_id: document.getElementById('o_course').value,
+        semester: document.getElementById('o_semester').value
+    };
+    if (id !== '') payload.offering_id = id;
+    
+    try {
+        const res = await fetch('php/admin/offerings.php', { method: id ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        const data = await res.json();
+        if (res.ok) { closeModal('offering-modal'); loadOfferings(); } else alert(data.error);
+    } catch(e) { alert(e); }
+}
+
+async function deleteOffering(id) {
+    if (!confirm('Delete this offering?')) return;
+    const res = await fetch('php/admin/offerings.php', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ offering_id: id }) });
+    if (res.ok) loadOfferings(); else alert((await res.json()).error);
+}
+
 // Initialization calls
 loadCourses();
 loadStudents();
 loadInstructors();
 loadDepartments();
+loadOfferings();

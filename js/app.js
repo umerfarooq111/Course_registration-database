@@ -1,9 +1,16 @@
 let courses = [];
 let enrolledCourses = [];
 
+function getApiUrl(path) {
+    if (window.location.protocol === 'file:') {
+        throw new Error('Please open this page using your local web server, for example http://localhost/course_registration_system/index.html');
+    }
+    return new URL(path, window.location.href).href;
+}
+
 async function loadAvailableCourses() {
     try {
-        const response = await fetch('php/get_courses.php');
+        const response = await fetch(getApiUrl('php/get_courses.php'));
         if (!response.ok) throw new Error('Failed to fetch courses');
         const data = await response.json();
 
@@ -28,7 +35,7 @@ async function loadAvailableCourses() {
 
 async function loadEnrolledCourses() {
     try {
-        const response = await fetch('php/student/get_my_courses.php');
+        const response = await fetch(getApiUrl('php/student/get_my_courses.php'));
         if (!response.ok) {
             // Authentication issue or server error
             if (response.status === 401) {
@@ -57,8 +64,8 @@ async function loadEnrolledCourses() {
 function renderCourses() {
     const container = document.getElementById('courses');
     container.innerHTML = `
-        <table aria-label="Available Courses">
-            <thead>
+        <table class="table table-hover align-middle mb-0" aria-label="Available Courses">
+            <thead class="table-light">
                 <tr>
                     <th>Course Code</th>
                     <th>Course Name</th>
@@ -86,7 +93,7 @@ function renderCourses() {
                         <td>${course.credits}</td>
                         <td>${course.capacity - course.enrolled}</td>
                         <td>
-                            <button onclick="enroll(${course.id})" ${btnDisabled}>
+                            <button class="btn ${btnDisabled ? 'btn-secondary' : 'btn-primary'} btn-sm" onclick="enroll(${course.id})" ${btnDisabled}>
                                 ${btnText}
                             </button>
                         </td>
@@ -103,12 +110,12 @@ function renderEnrolled() {
     const activeEnrolled = enrolledCourses.filter(c => c.status === 'REGISTERED');
 
     if (activeEnrolled.length === 0) {
-        container.innerHTML = '<p>No active courses registered yet.</p>';
+        container.innerHTML = '<div class="p-5 text-center text-muted">No active courses registered yet.</div>';
         return;
     }
     container.innerHTML = `
-        <table aria-label="My Enrolled Courses">
-            <thead>
+        <table class="table table-hover align-middle mb-0" aria-label="My Enrolled Courses">
+            <thead class="table-light">
                 <tr>
                     <th>Course Code</th>
                     <th>Course Name</th>
@@ -123,7 +130,7 @@ function renderEnrolled() {
                         <td>${course.title}</td>
                         <td>${course.credits}</td>
                         <td>
-                            <button style="background: #dc3545;" onclick="drop(${course.id})">Drop</button>
+                            <button class="btn btn-danger btn-sm" onclick="drop(${course.id})">Drop</button>
                         </td>
                     </tr>
                 `).join('')}
@@ -134,7 +141,7 @@ function renderEnrolled() {
 
 async function enroll(sectionId) {
     try {
-        const response = await fetch('php/student/enroll.php', {
+        const response = await fetch(getApiUrl('php/student/enroll.php'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ section_id: sectionId })
@@ -162,7 +169,7 @@ async function drop(sectionId) {
     if (!confirm('Are you sure you want to drop this course?')) return;
 
     try {
-        const response = await fetch('php/student/drop.php', {
+        const response = await fetch(getApiUrl('php/student/drop.php'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ section_id: sectionId })
@@ -185,6 +192,46 @@ async function drop(sectionId) {
         alert('An error occurred while dropping the course.');
     }
 }
+
+async function loadProfile() {
+    try {
+        const response = await fetch(getApiUrl('php/student/get_profile.php'));
+        if (response.ok) {
+            const data = await response.json();
+            document.getElementById('st-name').innerText = data.name;
+            document.getElementById('st-email').innerText = data.email;
+            document.getElementById('st-semester').innerText = data.semester;
+            document.getElementById('reg-semester').innerText = data.semester;
+            document.getElementById('st-status').innerText = data.status;
+            
+            // Set Badge Color based on status
+            const badge = document.getElementById('st-status');
+            badge.className = 'badge fs-6 mb-2 px-3 py-2';
+            if(data.status === 'CURRENT') badge.classList.add('bg-success');
+            else if(data.status === 'DROPPED') badge.classList.add('bg-danger');
+            else if(data.status === 'GRADUATED') badge.classList.add('bg-primary');
+            else badge.classList.add('bg-secondary');
+            
+            document.getElementById('sum-cgpa').innerText = data.cgpa || '0.00';
+            
+            // Re-calculate registered courses and credits
+            const activeEnrolled = enrolledCourses.filter(c => c.status === 'REGISTERED');
+            document.getElementById('sum-courses').innerText = activeEnrolled.length;
+            
+            const totalCredits = activeEnrolled.reduce((sum, course) => sum + course.credits, 0);
+            document.getElementById('sum-credits').innerText = totalCredits + parseInt(data.credits_completed || 0);
+        }
+    } catch (e) {
+        console.error('Profile load error:', e);
+    }
+}
+
+// Intercept loads to update profile too
+const origLoadEnrolled = loadEnrolledCourses;
+loadEnrolledCourses = async function() {
+    await origLoadEnrolled();
+    await loadProfile();
+};
 
 // Init
 loadAvailableCourses();

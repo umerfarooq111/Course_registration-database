@@ -8,7 +8,7 @@ header('Content-Type: application/json; charset=utf-8');
 
 try {
     if ($method === 'GET') {
-        $res = $conn->query("SELECT student_id, name, email, phone_no, dob, enrollment_date, status, password FROM Student ORDER BY student_id ASC");
+        $res = $conn->query("SELECT student_id, name, email, phone_no, dob, enrollment_date, status, password, cgpa, semester, credits_completed FROM Student ORDER BY student_id ASC");
         $data = [];
         while ($row = $res->fetch_assoc()) $data[] = $row;
         send_json($data);
@@ -20,11 +20,14 @@ try {
         $phone = trim($data['phone_no'] ?? '');
         $password = trim($data['password'] ?? '');
         $status = 'CURRENT'; // Explicitly set starting status
+        $cgpa = floatval($data['cgpa'] ?? 0);
+        $semester = intval($data['semester'] ?? 1);
+        $credits = intval($data['credits_completed'] ?? 0);
 
         if (!$name || !$email || !$password) send_json(['error' => 'Name, Email, and Password are required'], 400);
 
-        $stmt = $conn->prepare('INSERT INTO Student (name, email, phone_no, password, enrollment_date, status) VALUES (?, ?, ?, ?, CURDATE(), ?)');
-        $stmt->bind_param('sssss', $name, $email, $phone, $password, $status);
+        $stmt = $conn->prepare('INSERT INTO Student (name, email, phone_no, password, enrollment_date, status, cgpa, semester, credits_completed) VALUES (?, ?, ?, ?, CURDATE(), ?, ?, ?, ?)');
+        $stmt->bind_param('sssssdii', $name, $email, $phone, $password, $status, $cgpa, $semester, $credits);
         $stmt->execute();
         send_json(['message' => 'Student created successfully']);
 
@@ -36,15 +39,18 @@ try {
         $phone = trim($data['phone_no'] ?? '');
         $password = trim($data['password'] ?? '');
         $status = trim($data['status'] ?? 'CURRENT');
+        $cgpa = floatval($data['cgpa'] ?? 0);
+        $semester = intval($data['semester'] ?? 1);
+        $credits = intval($data['credits_completed'] ?? 0);
 
         if ($id <= 0 || !$name || !$email) send_json(['error' => 'Invalid data'], 400);
 
         if ($password !== '') {
-            $stmt = $conn->prepare('UPDATE Student SET name = ?, email = ?, phone_no = ?, password = ?, status = ? WHERE student_id = ?');
-            $stmt->bind_param('sssssi', $name, $email, $phone, $password, $status, $id);
+            $stmt = $conn->prepare('UPDATE Student SET name = ?, email = ?, phone_no = ?, password = ?, status = ?, cgpa = ?, semester = ?, credits_completed = ? WHERE student_id = ?');
+            $stmt->bind_param('sssssdiii', $name, $email, $phone, $password, $status, $cgpa, $semester, $credits, $id);
         } else {
-            $stmt = $conn->prepare('UPDATE Student SET name = ?, email = ?, phone_no = ?, status = ? WHERE student_id = ?');
-            $stmt->bind_param('ssssi', $name, $email, $phone, $status, $id);
+            $stmt = $conn->prepare('UPDATE Student SET name = ?, email = ?, phone_no = ?, status = ?, cgpa = ?, semester = ?, credits_completed = ? WHERE student_id = ?');
+            $stmt->bind_param('ssssdiii', $name, $email, $phone, $status, $cgpa, $semester, $credits, $id);
         }
         $stmt->execute();
         send_json(['message' => 'Student updated successfully']);

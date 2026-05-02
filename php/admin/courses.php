@@ -8,7 +8,8 @@ header('Content-Type: application/json; charset=utf-8');
 
 try {
     if ($method === 'GET') {
-        $query = "SELECT c.course_id, c.title, c.credit_hr, c.max_capacity, d.department_name, c.department_id 
+        $query = "SELECT c.course_id, c.title, c.credit_hr, c.max_capacity, d.department_name, c.department_id, c.course_type, 
+                  (SELECT required_course_id FROM Pre_Requisite WHERE course_id = c.course_id LIMIT 1) AS prereq_id
                   FROM Course c
                   LEFT JOIN Department d ON c.department_id = d.department_id
                   ORDER BY c.course_id ASC";
@@ -25,15 +26,28 @@ try {
         $credit_hr = intval($data['credit_hr']);
         $max_capacity = intval($data['max_capacity']);
         $department_id = intval($data['department_id']);
+        $course_type = in_array($data['course_type'], ['Core', 'Elective']) ? $data['course_type'] : 'Core';
+        $prereq_id = intval($data['prereq_id']);
         
         if (!$title || $credit_hr <= 0 || $max_capacity <= 0 || $department_id <= 0) {
             send_json(['error' => 'Invalid or missing course data'], 400);
         }
 
-        $stmt = $conn->prepare('INSERT INTO Course (title, credit_hr, max_capacity, department_id, admin_id) VALUES (?, ?, ?, ?, ?)');
-        $stmt->bind_param('siiii', $title, $credit_hr, $max_capacity, $department_id, $admin_id);
+        $conn->begin_transaction();
+        $stmt = $conn->prepare('INSERT INTO Course (title, credit_hr, max_capacity, department_id, admin_id, course_type) VALUES (?, ?, ?, ?, ?, ?)');
+        $stmt->bind_param('siiiis', $title, $credit_hr, $max_capacity, $department_id, $admin_id, $course_type);
         $stmt->execute();
+        $new_course_id = $stmt->insert_id;
         $stmt->close();
+
+        if ($prereq_id > 0) {
+            $stmt = $conn->prepare('INSERT INTO Pre_Requisite (course_id, required_course_id) VALUES (?, ?)');
+            $stmt->bind_param('ii', $new_course_id, $prereq_id);
+            $stmt->execute();
+            $stmt->close();
+        }
+        $conn->commit();
+
         send_json(['message' => 'Course created successfully']);
 
     } elseif ($method === 'PUT') {
@@ -43,15 +57,32 @@ try {
         $credit_hr = intval($data['credit_hr']);
         $max_capacity = intval($data['max_capacity']);
         $department_id = intval($data['department_id']);
+        $course_type = in_array($data['course_type'], ['Core', 'Elective']) ? $data['course_type'] : 'Core';
+        $prereq_id = intval($data['prereq_id']);
 
         if ($course_id <= 0 || !$title || $credit_hr <= 0 || $max_capacity <= 0 || $department_id <= 0) {
             send_json(['error' => 'Invalid or missing update data'], 400);
         }
 
-        $stmt = $conn->prepare('UPDATE Course SET title = ?, credit_hr = ?, max_capacity = ?, department_id = ? WHERE course_id = ?');
-        $stmt->bind_param('siiii', $title, $credit_hr, $max_capacity, $department_id, $course_id);
+        $conn->begin_transaction();
+        $stmt = $conn->prepare('UPDATE Course SET title = ?, credit_hr = ?, max_capacity = ?, department_id = ?, course_type = ? WHERE course_id = ?');
+        $stmt->bind_param('siiisi', $title, $credit_hr, $max_capacity, $department_id, $course_type, $course_id);
         $stmt->execute();
         $stmt->close();
+
+        $stmt = $conn->prepare('DELETE FROM Pre_Requisite WHERE course_id = ?');
+        $stmt->bind_param('i', $course_id);
+        $stmt->execute();
+        $stmt->close();
+
+        if ($prereq_id > 0) {
+            $stmt = $conn->prepare('INSERT INTO Pre_Requisite (course_id, required_course_id) VALUES (?, ?)');
+            $stmt->bind_param('ii', $course_id, $prereq_id);
+            $stmt->execute();
+            $stmt->close();
+        }
+        $conn->commit();
+
         send_json(['message' => 'Course updated successfully']);
 
     } elseif ($method === 'DELETE') {
@@ -68,6 +99,7 @@ try {
     }
 
 } catch (Exception $e) {
+    if (isset($conn) && $conn->in_transaction) $conn->rollback();
     send_json(['error' => $e->getMessage()], 500);
 }
 ?>
