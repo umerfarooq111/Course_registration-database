@@ -4,19 +4,30 @@ let adminInstructors = [];
 let adminDepts = [];
 
 function switchTab(tabName) {
-    document.getElementById('tab-courses').style.display = 'none';
-    document.getElementById('tab-students').style.display = 'none';
-    document.getElementById('tab-instructors').style.display = 'none';
-    document.getElementById('tab-departments').style.display = 'none';
-    document.getElementById('tab-offerings').style.display = 'none';
+    const tabs = ['dashboard', 'courses', 'students', 'instructors', 'departments', 'offerings'];
+    tabs.forEach(tab => {
+        const el = document.getElementById('tab-' + tab);
+        if (el) {
+            el.classList.remove('d-block');
+            el.classList.add('d-none');
+        }
+    });
     
-    document.getElementById('tab-' + tabName).style.display = 'block';
-    
-    const links = document.getElementById('tab-links').getElementsByTagName('a');
-    for(let i = 0; i < links.length; i++) {
-        links[i].style.color = '#bdc3c7';
+    const activeTab = document.getElementById('tab-' + tabName);
+    if (activeTab) {
+        activeTab.classList.remove('d-none');
+        activeTab.classList.add('d-block');
     }
-    event.target.style.color = '#ecf0f1';
+    
+    if (event && event.currentTarget) {
+        const links = document.getElementById('tab-links').getElementsByTagName('a');
+        for(let i = 0; i < links.length; i++) {
+            links[i].classList.remove('active');
+        }
+        event.currentTarget.classList.add('active');
+        const titleText = event.currentTarget.innerText.trim();
+        document.getElementById('page-title').innerText = titleText;
+    }
 }
 
 function closeModal(id) {
@@ -38,7 +49,8 @@ async function loadCourses() {
             adminCourses = data;
             const list = document.getElementById('course-list-container');
             if(adminCourses.length === 0) { list.innerHTML = '<p>No courses found.</p>'; return; }
-            let html = `<table><thead><tr><th>ID</th><th>Course Title</th><th>Type</th><th>Prereq ID</th><th>Department</th><th>Credits</th><th>Capacity</th><th>Actions</th></tr></thead><tbody>`;
+            let html = `<table class="table table-bordered table-striped table-hover align-middle">
+                <thead class="table-light"><tr><th>ID</th><th>Course Title</th><th>Type</th><th>Prereq ID</th><th>Department</th><th>Credits</th><th>Capacity</th><th>Actions</th></tr></thead><tbody>`;
             adminCourses.forEach(c => {
                 html += `<tr>
                     <td>${c.course_id}</td>
@@ -49,8 +61,8 @@ async function loadCourses() {
                     <td>${c.credit_hr}</td>
                     <td>${c.max_capacity}</td>
                     <td>
-                        <button onclick="editCourse('${escapeHtml(c)}')" style="background:#f39c12; margin-right: 5px;">Edit</button>
-                        <button onclick="deleteCourse(${c.course_id})" style="background:#c0392b;">Delete</button>
+                        <button onclick="editCourse('${escapeHtml(c)}')" class="btn btn-warning btn-sm me-1"><i class="bi bi-pencil-square"></i> Edit</button>
+                        <button onclick="deleteCourse(${c.course_id})" class="btn btn-danger btn-sm"><i class="bi bi-trash"></i> Delete</button>
                     </td>
                 </tr>`;
             });
@@ -118,7 +130,8 @@ async function loadStudents() {
             adminStudents = data;
             const list = document.getElementById('student-list-container');
             if(adminStudents.length === 0) { list.innerHTML = '<p>No students found.</p>'; return; }
-            let html = `<table><thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Status</th><th>Semester</th><th>CGPA</th><th>Cr. Compl.</th><th>Actions</th></tr></thead><tbody>`;
+            let html = `<table class="table table-bordered table-striped table-hover align-middle">
+                <thead class="table-light"><tr><th>ID</th><th>Name</th><th>Email</th><th>Status</th><th>Semester</th><th>CGPA</th><th>Cr. Compl.</th><th>Actions</th></tr></thead><tbody>`;
             adminStudents.forEach(s => {
                 html += `<tr>
                     <td>STD-${s.student_id}</td>
@@ -129,8 +142,8 @@ async function loadStudents() {
                     <td>${s.cgpa}</td>
                     <td>${s.credits_completed}</td>
                     <td>
-                        <button onclick="editStudent('${escapeHtml(s)}')" style="background:#f39c12; margin-right: 5px;">Edit</button>
-                        <button onclick="deleteStudent(${s.student_id})" style="background:#c0392b;">Delete</button>
+                        <button onclick="editStudent('${escapeHtml(s)}')" class="btn btn-warning btn-sm me-1"><i class="bi bi-pencil-square"></i> Edit</button>
+                        <button onclick="deleteStudent(${s.student_id})" class="btn btn-danger btn-sm"><i class="bi bi-trash"></i> Delete</button>
                     </td>
                 </tr>`;
             });
@@ -204,7 +217,8 @@ async function loadInstructors() {
             adminInstructors = data;
             const list = document.getElementById('instructor-list-container');
             if(adminInstructors.length === 0) { list.innerHTML = '<p>No instructors found.</p>'; return; }
-            let html = `<table><thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Department</th><th>Actions</th></tr></thead><tbody>`;
+            let html = `<table class="table table-bordered table-striped table-hover align-middle">
+                <thead class="table-light"><tr><th>ID</th><th>Name</th><th>Email</th><th>Department</th><th>Actions</th></tr></thead><tbody>`;
             adminInstructors.forEach(i => {
                 html += `<tr>
                     <td>${i.instructor_id}</td>
@@ -212,8 +226,8 @@ async function loadInstructors() {
                     <td>${i.email}</td>
                     <td>${i.department_name || 'Unassigned'}</td>
                     <td>
-                        <button onclick="editInstructor('${escapeHtml(i)}')" style="background:#f39c12; margin-right: 5px;">Edit</button>
-                        <button onclick="deleteInstructor(${i.instructor_id})" style="background:#c0392b;">Delete</button>
+                        <button onclick="editInstructor('${escapeHtml(i)}')" class="btn btn-warning btn-sm me-1"><i class="bi bi-pencil-square"></i> Edit</button>
+                        <button onclick="deleteInstructor(${i.instructor_id})" class="btn btn-danger btn-sm"><i class="bi bi-trash"></i> Delete</button>
                     </td>
                 </tr>`;
             });
@@ -272,14 +286,15 @@ async function loadDepartments() {
             adminDepts = data;
             const list = document.getElementById('dept-list-container');
             if(adminDepts.length === 0) { list.innerHTML = '<p>No departments found.</p>'; return; }
-            let html = `<table><thead><tr><th>ID</th><th>Department Name</th><th>Actions</th></tr></thead><tbody>`;
+            let html = `<table class="table table-bordered table-striped table-hover align-middle">
+                <thead class="table-light"><tr><th>ID</th><th>Department Name</th><th>Actions</th></tr></thead><tbody>`;
             adminDepts.forEach(d => {
                 html += `<tr>
                     <td>${d.department_id}</td>
                     <td><strong>${d.department_name}</strong></td>
                     <td>
-                        <button onclick="editDept('${escapeHtml(d)}')" style="background:#f39c12; margin-right: 5px;">Edit</button>
-                        <button onclick="deleteDept(${d.department_id})" style="background:#c0392b;">Delete</button>
+                        <button onclick="editDept('${escapeHtml(d)}')" class="btn btn-warning btn-sm me-1"><i class="bi bi-pencil-square"></i> Edit</button>
+                        <button onclick="deleteDept(${d.department_id})" class="btn btn-danger btn-sm"><i class="bi bi-trash"></i> Delete</button>
                     </td>
                 </tr>`;
             });
@@ -329,15 +344,16 @@ async function loadOfferings() {
         if (res.ok) {
             const list = document.getElementById('offering-list-container');
             if(data.length === 0) { list.innerHTML = '<p>No offerings found.</p>'; return; }
-            let html = `<table><thead><tr><th>Offering ID</th><th>Course ID</th><th>Semester/Batch</th><th>Actions</th></tr></thead><tbody>`;
+            let html = `<table class="table table-bordered table-striped table-hover align-middle">
+                <thead class="table-light"><tr><th>Offering ID</th><th>Course ID</th><th>Semester/Batch</th><th>Actions</th></tr></thead><tbody>`;
             data.forEach(o => {
                 html += `<tr>
                     <td>${o.offering_id}</td>
                     <td>${o.course_id} - ${o.title}</td>
                     <td>Semester ${o.semester}</td>
                     <td>
-                        <button onclick="editOffering('${escapeHtml(o)}')" style="background:#f39c12; margin-right: 5px;">Edit</button>
-                        <button onclick="deleteOffering(${o.offering_id})" style="background:#c0392b;">Delete</button>
+                        <button onclick="editOffering('${escapeHtml(o)}')" class="btn btn-warning btn-sm me-1"><i class="bi bi-pencil-square"></i> Edit</button>
+                        <button onclick="deleteOffering(${o.offering_id})" class="btn btn-danger btn-sm"><i class="bi bi-trash"></i> Delete</button>
                     </td>
                 </tr>`;
             });
