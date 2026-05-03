@@ -288,7 +288,14 @@
                 <button type="button" class="btn-close" onclick="closeModal('offering-modal')"></button>
             </div>
             <input type="hidden" id="o_id">
-            <div class="mb-3"><label class="form-label">Course ID</label><input type="number" id="o_course" class="form-control" required></div>
+            <div class="mb-3">
+                <label class="form-label">Course</label>
+                <select id="o_course" class="form-select" required></select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Instructor</label>
+                <select id="o_instructor" class="form-select" required></select>
+            </div>
             <div class="mb-4"><label class="form-label">Semester / Batch</label><input type="number" id="o_semester" class="form-control" required></div>
             <div class="d-flex justify-content-end gap-2">
                 <button onclick="closeModal('offering-modal')" class="btn btn-secondary">Cancel</button>

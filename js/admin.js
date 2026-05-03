@@ -345,12 +345,13 @@ async function loadOfferings() {
             const list = document.getElementById('offering-list-container');
             if(data.length === 0) { list.innerHTML = '<p>No offerings found.</p>'; return; }
             let html = `<table class="table table-bordered table-striped table-hover align-middle">
-                <thead class="table-light"><tr><th>Offering ID</th><th>Course ID</th><th>Semester/Batch</th><th>Actions</th></tr></thead><tbody>`;
+                <thead class="table-light"><tr><th>Offering ID</th><th>Course ID</th><th>Semester/Batch</th><th>Instructor</th><th>Actions</th></tr></thead><tbody>`;
             data.forEach(o => {
                 html += `<tr>
                     <td>${o.offering_id}</td>
                     <td>${o.course_id} - ${o.title}</td>
                     <td>Semester ${o.semester}</td>
+                    <td>${o.instructor_name || 'TBA'}</td>
                     <td>
                         <button onclick="editOffering('${escapeHtml(o)}')" class="btn btn-warning btn-sm me-1"><i class="bi bi-pencil-square"></i> Edit</button>
                         <button onclick="deleteOffering(${o.offering_id})" class="btn btn-danger btn-sm"><i class="bi bi-trash"></i> Delete</button>
@@ -362,10 +363,26 @@ async function loadOfferings() {
     } catch(e) { console.error(e); }
 }
 
+function populateOfferingDropdowns() {
+    const courseSelect = document.getElementById('o_course');
+    courseSelect.innerHTML = '<option value="">Select a Course</option>';
+    adminCourses.forEach(c => {
+        courseSelect.innerHTML += `<option value="${c.course_id}">${c.course_id} - ${c.title}</option>`;
+    });
+
+    const instructorSelect = document.getElementById('o_instructor');
+    instructorSelect.innerHTML = '<option value="">Select an Instructor</option>';
+    adminInstructors.forEach(i => {
+        instructorSelect.innerHTML += `<option value="${i.instructor_id}">${i.instructor_name} (${i.department_name || 'No Dept'})</option>`;
+    });
+}
+
 function openOfferingModal() {
     document.getElementById('o-modal-title').innerText = 'Add Course Offering';
     document.getElementById('o_id').value = '';
+    populateOfferingDropdowns();
     document.getElementById('o_course').value = '';
+    document.getElementById('o_instructor').value = '';
     document.getElementById('o_semester').value = '';
     document.getElementById('offering-modal').style.display = 'flex';
 }
@@ -374,7 +391,9 @@ function editOffering(dataJSON) {
     const o = JSON.parse(dataJSON);
     document.getElementById('o-modal-title').innerText = 'Edit Course Offering';
     document.getElementById('o_id').value = o.offering_id;
+    populateOfferingDropdowns();
     document.getElementById('o_course').value = o.course_id;
+    document.getElementById('o_instructor').value = o.instructor_id || '';
     document.getElementById('o_semester').value = o.semester;
     document.getElementById('offering-modal').style.display = 'flex';
 }
@@ -383,7 +402,8 @@ async function saveOffering() {
     const id = document.getElementById('o_id').value;
     const payload = { 
         course_id: document.getElementById('o_course').value,
-        semester: document.getElementById('o_semester').value
+        semester: document.getElementById('o_semester').value,
+        instructor_id: document.getElementById('o_instructor').value
     };
     if (id !== '') payload.offering_id = id;
     
