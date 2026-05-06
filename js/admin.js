@@ -420,9 +420,102 @@ async function deleteOffering(id) {
     if (res.ok) loadOfferings(); else alert((await res.json()).error);
 }
 
+async function loadDashboardStats() {
+    try {
+        const res = await fetch('php/admin/dashboard_stats.php');
+        if (res.status === 401) return;
+        const data = await res.json();
+        
+        if (res.ok) {
+            document.getElementById('stat-students').innerText = data.total_students;
+            document.getElementById('stat-courses').innerText = data.total_courses;
+            document.getElementById('stat-instructors').innerText = data.total_instructors;
+        }
+    } catch(e) { console.error(e); }
+}
+
+function openNoticeModal() {
+    const modal = document.getElementById('notice-modal');
+    if (!modal) {
+        console.error('Notice modal element not found!');
+        return;
+    }
+    const titleInput = document.getElementById('n_title');
+    const contentInput = document.getElementById('n_content');
+    
+    if (titleInput) titleInput.value = '';
+    if (contentInput) contentInput.value = '';
+    
+    modal.style.display = 'flex';
+}
+
+async function saveNotice() {
+    const title = document.getElementById('n_title').value;
+    const content = document.getElementById('n_content').value;
+    if (!title || !content) { alert('Please fill all fields'); return; }
+
+    try {
+        const res = await fetch('php/admin/notices.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title, content })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            closeModal('notice-modal');
+            loadNotices();
+        } else alert(data.error);
+    } catch (e) { alert(e); }
+}
+
+async function loadNotices() {
+    try {
+        const res = await fetch('php/admin/notices.php');
+        const notices = await res.json();
+        const container = document.getElementById('notice-board-container');
+        if (!container) return;
+        if (notices.length === 0) {
+            container.innerHTML = '<div class="col-12 text-center py-4 text-muted">No notices posted yet.</div>';
+            return;
+        }
+        let html = '';
+        notices.forEach(n => {
+            const date = new Date(n.created_at).toLocaleString();
+            html += `
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100 border-light shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <h6 class="fw-bold text-primary">${n.title}</h6>
+                                <button onclick="deleteNotice(${n.id})" class="btn btn-sm btn-link text-danger p-0"><i class="bi bi-trash"></i></button>
+                            </div>
+                            <p class="small mb-2 text-dark">${n.content}</p>
+                            <div class="text-muted" style="font-size: 0.75rem;"><i class="bi bi-calendar3"></i> ${date}</div>
+                        </div>
+                    </div>
+                </div>`;
+        });
+        container.innerHTML = html;
+    } catch (e) { console.error(e); }
+}
+
+async function deleteNotice(id) {
+    if (!confirm('Delete this notice?')) return;
+    try {
+        const res = await fetch('php/admin/notices.php', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id })
+        });
+        if (res.ok) loadNotices();
+    } catch (e) { alert(e); }
+}
+
 // Initialization calls
 loadCourses();
 loadStudents();
 loadInstructors();
 loadDepartments();
 loadOfferings();
+loadDashboardStats();
+loadNotices();

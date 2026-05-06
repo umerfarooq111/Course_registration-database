@@ -233,6 +233,38 @@ loadEnrolledCourses = async function() {
     await loadProfile();
 };
 
+async function loadNotices() {
+    try {
+        const response = await fetch(getApiUrl('php/student/notices.php'));
+        if (!response.ok) throw new Error('Failed to fetch notices');
+        const notices = await response.json();
+        const container = document.getElementById('student-notice-container');
+        if (!container) return;
+        if (notices.length === 0) {
+            container.innerHTML = '<div class="col-12 text-center py-4 text-muted">No notices at this time.</div>';
+            return;
+        }
+        let html = '';
+        notices.forEach(n => {
+            const date = new Date(n.created_at).toLocaleDateString();
+            html += `
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100 border-0 shadow-sm" style="border-left: 4px solid #3498db !important;">
+                        <div class="card-body">
+                            <h6 class="fw-bold text-primary mb-2">${n.title}</h6>
+                            <p class="small mb-2 text-dark">${n.content}</p>
+                            <div class="text-muted" style="font-size: 0.75rem;"><i class="bi bi-calendar3"></i> Posted on ${date}</div>
+                        </div>
+                    </div>
+                </div>`;
+        });
+        container.innerHTML = html;
+    } catch (error) {
+        console.error('Notices load error:', error);
+    }
+}
+
 // Init
 loadAvailableCourses();
 loadEnrolledCourses();
+loadNotices();
