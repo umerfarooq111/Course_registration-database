@@ -243,7 +243,7 @@
                 <div class="col"><label class="form-label">Credits</label><input type="number" id="c_credits" class="form-control" min="1" required></div>
                 <div class="col"><label class="form-label">Capacity</label><input type="number" id="c_capacity" class="form-control" min="1" required></div>
             </div>
-            <div class="mb-3"><label class="form-label">Department ID</label><input type="number" id="c_dept" class="form-control" required></div>
+            <div class="mb-3"><label class="form-label">Department</label><select id="c_dept" class="form-select" required></select></div>
             <div class="mb-3">
                 <label class="form-label">Course Type</label>
                 <select id="c_type" class="form-select">
@@ -304,7 +304,7 @@
             <input type="hidden" id="i_id">
             <div class="mb-3"><label class="form-label">Name</label><input type="text" id="i_name" class="form-control" required></div>
             <div class="mb-3"><label class="form-label">Email</label><input type="email" id="i_email" class="form-control" required></div>
-            <div class="mb-4"><label class="form-label">Department ID</label><input type="number" id="i_dept" class="form-control" required></div>
+            <div class="mb-4"><label class="form-label">Department</label><select id="i_dept" class="form-select" required></select></div>
             <div class="d-flex justify-content-end gap-2">
                 <button onclick="closeModal('instructor-modal')" class="btn btn-secondary">Cancel</button>
                 <button onclick="saveInstructor()" class="btn btn-primary">Save Instructor</button>
@@ -376,6 +376,6 @@
 
     <!-- Bootstrap 5 JS Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="js/admin.js?v=4"></script>
+    <script src="js/admin.js?v=6"></script>
 </body>
 </html>

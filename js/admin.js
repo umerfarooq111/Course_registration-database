@@ -57,7 +57,7 @@ async function loadCourses() {
                     <td><strong>${c.title}</strong></td>
                     <td>${c.course_type}</td>
                     <td>${c.prereq_id || 'None'}</td>
-                    <td>${c.department_name} (ID: ${c.department_id})</td>
+                    <td>${c.department_name}</td>
                     <td>${c.credit_hr}</td>
                     <td>${c.max_capacity}</td>
                     <td>
@@ -71,26 +71,62 @@ async function loadCourses() {
     } catch(e) { console.error(e); }
 }
 
-function openCourseModal() {
+async function populateDeptDropdown(selectId) {
+    const deptSelect = document.getElementById(selectId);
+    if (!deptSelect) return;
+    
+    deptSelect.innerHTML = '<option value="">Loading...</option>';
+    
+    try {
+        const res = await fetch('php/admin/departments.php');
+        if (res.status === 401) {
+            window.location.href = 'admin_login.php';
+            return;
+        }
+        
+        const data = await res.json();
+        if (res.ok && Array.isArray(data)) {
+            adminDepts = data;
+            let options = '<option value="">Select Department</option>';
+            data.forEach(d => {
+                options += `<option value="${d.department_id}">${d.department_name}</option>`;
+            });
+            deptSelect.innerHTML = options;
+        } else {
+            deptSelect.innerHTML = '<option value="">No departments found</option>';
+        }
+    } catch(e) {
+        console.error('Dept Fetch Error:', e);
+        deptSelect.innerHTML = '<option value="">Error loading list</option>';
+    }
+}
+
+async function openCourseModal() {
     document.getElementById('c-modal-title').innerText = 'Add Course';
     document.getElementById('c_id').value = '';
     document.getElementById('c_title').value = '';
     document.getElementById('c_credits').value = '';
     document.getElementById('c_capacity').value = '';
+    
+    await populateDeptDropdown('c_dept');
     document.getElementById('c_dept').value = '';
+    
     document.getElementById('c_type').value = 'Core';
     document.getElementById('c_prereq').value = '';
     document.getElementById('course-modal').style.display = 'flex';
 }
 
-function editCourse(dataJSON) {
+async function editCourse(dataJSON) {
     const c = JSON.parse(dataJSON);
     document.getElementById('c-modal-title').innerText = 'Edit Course';
     document.getElementById('c_id').value = c.course_id;
     document.getElementById('c_title').value = c.title;
     document.getElementById('c_credits').value = c.credit_hr;
     document.getElementById('c_capacity').value = c.max_capacity;
+    
+    await populateDeptDropdown('c_dept');
     document.getElementById('c_dept').value = c.department_id;
+    
     document.getElementById('c_type').value = c.course_type;
     document.getElementById('c_prereq').value = c.prereq_id || '';
     document.getElementById('course-modal').style.display = 'flex';
@@ -236,21 +272,23 @@ async function loadInstructors() {
     } catch(e) { console.error(e); }
 }
 
-function openInstructorModal() {
+async function openInstructorModal() {
     document.getElementById('i-modal-title').innerText = 'Add Instructor';
     document.getElementById('i_id').value = '';
     document.getElementById('i_name').value = '';
     document.getElementById('i_email').value = '';
+    await populateDeptDropdown('i_dept');
     document.getElementById('i_dept').value = '';
     document.getElementById('instructor-modal').style.display = 'flex';
 }
 
-function editInstructor(dataJSON) {
+async function editInstructor(dataJSON) {
     const i = JSON.parse(dataJSON);
     document.getElementById('i-modal-title').innerText = 'Edit Instructor';
     document.getElementById('i_id').value = i.instructor_id;
     document.getElementById('i_name').value = i.instructor_name;
     document.getElementById('i_email').value = i.email;
+    await populateDeptDropdown('i_dept');
     document.getElementById('i_dept').value = i.department_id;
     document.getElementById('instructor-modal').style.display = 'flex';
 }
