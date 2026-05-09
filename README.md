@@ -4,9 +4,9 @@ A comprehensive, web-based platform designed to streamline university operations
 
 ---
 
-## 🚀 Features
+## Features
 
-### 👨‍💼 Administrator Portal
+### Administrator Portal
 *   **Real-time Statistics:** Instant overview of total students, courses, instructors, and departments.
 *   **Department Management:** Create and organize academic departments.
 *   **Instructor Management:** Manage faculty profiles and assign them to departments.
@@ -15,7 +15,7 @@ A comprehensive, web-based platform designed to streamline university operations
 *   **Student Administration:** Manage student records, track academic progress (CGPA/Credits).
 *   **Notice Board:** Post institutional announcements and updates directly to the student dashboard.
 
-### 🎓 Student Portal
+### Student Portal
 *   **Academic Dashboard:** View personal academic standing, including current semester, CGPA, and completed credits.
 *   **Course Enrollment:** Browse available course offerings and enroll in sections based on the current semester.
 *   **Institutional Notices:** Stay updated with the latest news and announcements from the administration.
@@ -23,7 +23,7 @@ A comprehensive, web-based platform designed to streamline university operations
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 *   **Frontend:** HTML5, CSS3 (Modern UI with Glassmorphism & Responsive Design), JavaScript (Vanilla ES6).
 *   **Backend:** PHP 8.x (Modular architecture).
@@ -32,7 +32,7 @@ A comprehensive, web-based platform designed to streamline university operations
 
 ---
 
-## 📋 Prerequisites
+## Prerequisites
 
 Before you begin, ensure you have the following installed:
 *   [XAMPP](https://www.apachefriends.org/index.html) (Apache & MySQL).
@@ -40,7 +40,7 @@ Before you begin, ensure you have the following installed:
 
 ---
 
-## ⚙️ Installation & Setup
+## Installation & Setup
 
 1.  **Clone the Repository:**
     Place the project folder inside your XAMPP `htdocs` directory:
@@ -73,7 +73,7 @@ Before you begin, ensure you have the following installed:
 
 ---
 
-## 🔑 Default Credentials
+## Default Credentials
 
 | Role | Email | Password |
 | :--- | :--- | :--- |
@@ -82,7 +82,7 @@ Before you begin, ensure you have the following installed:
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```text
 course_registration_system/
@@ -102,10 +102,10 @@ course_registration_system/
 
 ---
 
-## 📸 Database Schema (ERD)
+## Database Schema (ERD)
 You can find the detailed Entity Relationship Diagram in the root directory as `ERD.png`. It illustrates the relationships between Students, Courses, Instructors, and Enrollments.
 
 ---
 
-## 📝 License
+## License
 This project is for educational purposes. Feel free to modify and adapt it for your own institutional needs.
