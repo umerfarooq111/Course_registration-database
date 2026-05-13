@@ -8,7 +8,9 @@ header('Content-Type: application/json; charset=utf-8');
 
 try {
     if ($method === 'GET') {
-        $res = $conn->query("SELECT * FROM Department ORDER BY department_id ASC");
+        $stmt = $conn->prepare("SELECT * FROM Department ORDER BY department_id ASC");
+        $stmt->execute();
+        $res = $stmt->get_result();
         $data = [];
         while ($row = $res->fetch_assoc()) $data[] = $row;
         send_json($data);

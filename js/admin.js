@@ -4,7 +4,7 @@ let adminInstructors = [];
 let adminDepts = [];
 
 function switchTab(tabName) {
-    const tabs = ['dashboard', 'courses', 'students', 'instructors', 'departments', 'offerings'];
+    const tabs = ['dashboard', 'courses', 'students', 'instructors', 'departments', 'offerings', 'limits'];
     tabs.forEach(tab => {
         const el = document.getElementById('tab-' + tab);
         if (el) {
@@ -12,16 +12,16 @@ function switchTab(tabName) {
             el.classList.add('d-none');
         }
     });
-    
+
     const activeTab = document.getElementById('tab-' + tabName);
     if (activeTab) {
         activeTab.classList.remove('d-none');
         activeTab.classList.add('d-block');
     }
-    
+
     if (event && event.currentTarget) {
         const links = document.getElementById('tab-links').getElementsByTagName('a');
-        for(let i = 0; i < links.length; i++) {
+        for (let i = 0; i < links.length; i++) {
             links[i].classList.remove('active');
         }
         event.currentTarget.classList.add('active');
@@ -44,11 +44,11 @@ async function loadCourses() {
         const res = await fetch('php/admin/courses.php');
         if (res.status === 401) { window.location.href = 'admin_login.php'; return; }
         const data = await res.json();
-        
+
         if (res.ok) {
             adminCourses = data;
             const list = document.getElementById('course-list-container');
-            if(adminCourses.length === 0) { list.innerHTML = '<p>No courses found.</p>'; return; }
+            if (adminCourses.length === 0) { list.innerHTML = '<p>No courses found.</p>'; return; }
             let html = `<table class="table table-bordered table-striped table-hover align-middle">
                 <thead class="table-light"><tr><th>ID</th><th>Course Title</th><th>Type</th><th>Prereq ID</th><th>Department</th><th>Credits</th><th>Capacity</th><th>Actions</th></tr></thead><tbody>`;
             adminCourses.forEach(c => {
@@ -68,22 +68,22 @@ async function loadCourses() {
             });
             list.innerHTML = html + `</tbody></table>`;
         }
-    } catch(e) { console.error(e); }
+    } catch (e) { console.error(e); }
 }
 
 async function populateDeptDropdown(selectId) {
     const deptSelect = document.getElementById(selectId);
     if (!deptSelect) return;
-    
+
     deptSelect.innerHTML = '<option value="">Loading...</option>';
-    
+
     try {
         const res = await fetch('php/admin/departments.php');
         if (res.status === 401) {
             window.location.href = 'admin_login.php';
             return;
         }
-        
+
         const data = await res.json();
         if (res.ok && Array.isArray(data)) {
             adminDepts = data;
@@ -95,7 +95,7 @@ async function populateDeptDropdown(selectId) {
         } else {
             deptSelect.innerHTML = '<option value="">No departments found</option>';
         }
-    } catch(e) {
+    } catch (e) {
         console.error('Dept Fetch Error:', e);
         deptSelect.innerHTML = '<option value="">Error loading list</option>';
     }
@@ -107,10 +107,10 @@ async function openCourseModal() {
     document.getElementById('c_title').value = '';
     document.getElementById('c_credits').value = '';
     document.getElementById('c_capacity').value = '';
-    
+
     await populateDeptDropdown('c_dept');
     document.getElementById('c_dept').value = '';
-    
+
     document.getElementById('c_type').value = 'Core';
     document.getElementById('c_prereq').value = '';
     document.getElementById('course-modal').style.display = 'flex';
@@ -123,10 +123,10 @@ async function editCourse(dataJSON) {
     document.getElementById('c_title').value = c.title;
     document.getElementById('c_credits').value = c.credit_hr;
     document.getElementById('c_capacity').value = c.max_capacity;
-    
+
     await populateDeptDropdown('c_dept');
     document.getElementById('c_dept').value = c.department_id;
-    
+
     document.getElementById('c_type').value = c.course_type;
     document.getElementById('c_prereq').value = c.prereq_id || '';
     document.getElementById('course-modal').style.display = 'flex';
@@ -143,12 +143,12 @@ async function saveCourse() {
         prereq_id: document.getElementById('c_prereq').value || 0
     };
     if (id !== '') payload.course_id = id;
-    
+
     try {
         const res = await fetch('php/admin/courses.php', { method: id ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         const data = await res.json();
         if (res.ok) { closeModal('course-modal'); loadCourses(); } else alert(data.error);
-    } catch(e) { alert(e); }
+    } catch (e) { alert(e); }
 }
 
 async function deleteCourse(id) {
@@ -165,15 +165,16 @@ async function loadStudents() {
         if (res.ok) {
             adminStudents = data;
             const list = document.getElementById('student-list-container');
-            if(adminStudents.length === 0) { list.innerHTML = '<p>No students found.</p>'; return; }
+            if (adminStudents.length === 0) { list.innerHTML = '<p>No students found.</p>'; return; }
             let html = `<table class="table table-bordered table-striped table-hover align-middle">
-                <thead class="table-light"><tr><th>ID</th><th>Name</th><th>Email</th><th>Status</th><th>Semester</th><th>CGPA</th><th>Cr. Compl.</th><th>Actions</th></tr></thead><tbody>`;
+                <thead class="table-light"><tr><th>ID</th><th>Name</th><th>Email</th><th>Status</th><th>Batch</th><th>Sem</th><th>CGPA</th><th>Cr. Compl.</th><th>Actions</th></tr></thead><tbody>`;
             adminStudents.forEach(s => {
                 html += `<tr>
                     <td>STD-${s.student_id}</td>
                     <td><strong>${s.name}</strong></td>
                     <td>${s.email}</td>
                     <td>${s.status}</td>
+                    <td>${s.batch || 2024}</td>
                     <td>${s.semester}</td>
                     <td>${s.cgpa}</td>
                     <td>${s.credits_completed}</td>
@@ -185,7 +186,7 @@ async function loadStudents() {
             });
             list.innerHTML = html + `</tbody></table>`;
         }
-    } catch(e) { console.error(e); }
+    } catch (e) { console.error(e); }
 }
 
 function openStudentModal() {
@@ -197,6 +198,7 @@ function openStudentModal() {
     document.getElementById('s_password').value = '';
     document.getElementById('s_status').value = 'CURRENT';
     document.getElementById('s_semester').value = 1;
+    document.getElementById('s_batch').value = 2024;
     document.getElementById('s_cgpa').value = 0.00;
     document.getElementById('s_credits').value = 0;
     document.getElementById('student-modal').style.display = 'flex';
@@ -212,6 +214,7 @@ function editStudent(dataJSON) {
     document.getElementById('s_password').value = ''; // leave blank by default
     document.getElementById('s_status').value = s.status;
     document.getElementById('s_semester').value = s.semester || 1;
+    document.getElementById('s_batch').value = s.batch || 2024;
     document.getElementById('s_cgpa').value = s.cgpa || 0.00;
     document.getElementById('s_credits').value = s.credits_completed || 0;
     document.getElementById('student-modal').style.display = 'flex';
@@ -226,16 +229,17 @@ async function saveStudent() {
         password: document.getElementById('s_password').value,
         status: document.getElementById('s_status').value,
         semester: document.getElementById('s_semester').value,
+        batch: document.getElementById('s_batch').value,
         cgpa: document.getElementById('s_cgpa').value,
         credits_completed: document.getElementById('s_credits').value
     };
     if (id !== '') payload.student_id = id;
-    
+
     try {
         const res = await fetch('php/admin/students.php', { method: id ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         const data = await res.json();
         if (res.ok) { closeModal('student-modal'); loadStudents(); } else alert(data.error);
-    } catch(e) { alert(e); }
+    } catch (e) { alert(e); }
 }
 
 async function deleteStudent(id) {
@@ -252,7 +256,7 @@ async function loadInstructors() {
         if (res.ok) {
             adminInstructors = data;
             const list = document.getElementById('instructor-list-container');
-            if(adminInstructors.length === 0) { list.innerHTML = '<p>No instructors found.</p>'; return; }
+            if (adminInstructors.length === 0) { list.innerHTML = '<p>No instructors found.</p>'; return; }
             let html = `<table class="table table-bordered table-striped table-hover align-middle">
                 <thead class="table-light"><tr><th>ID</th><th>Name</th><th>Email</th><th>Department</th><th>Actions</th></tr></thead><tbody>`;
             adminInstructors.forEach(i => {
@@ -269,7 +273,7 @@ async function loadInstructors() {
             });
             list.innerHTML = html + `</tbody></table>`;
         }
-    } catch(e) { console.error(e); }
+    } catch (e) { console.error(e); }
 }
 
 async function openInstructorModal() {
@@ -301,12 +305,12 @@ async function saveInstructor() {
         department_id: document.getElementById('i_dept').value
     };
     if (id !== '') payload.instructor_id = id;
-    
+
     try {
         const res = await fetch('php/admin/instructors.php', { method: id ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         const data = await res.json();
         if (res.ok) { closeModal('instructor-modal'); loadInstructors(); } else alert(data.error);
-    } catch(e) { alert(e); }
+    } catch (e) { alert(e); }
 }
 
 async function deleteInstructor(id) {
@@ -323,7 +327,7 @@ async function loadDepartments() {
         if (res.ok) {
             adminDepts = data;
             const list = document.getElementById('dept-list-container');
-            if(adminDepts.length === 0) { list.innerHTML = '<p>No departments found.</p>'; return; }
+            if (adminDepts.length === 0) { list.innerHTML = '<p>No departments found.</p>'; return; }
             let html = `<table class="table table-bordered table-striped table-hover align-middle">
                 <thead class="table-light"><tr><th>ID</th><th>Department Name</th><th>Actions</th></tr></thead><tbody>`;
             adminDepts.forEach(d => {
@@ -338,7 +342,7 @@ async function loadDepartments() {
             });
             list.innerHTML = html + `</tbody></table>`;
         }
-    } catch(e) { console.error(e); }
+    } catch (e) { console.error(e); }
 }
 
 function openDeptModal() {
@@ -360,12 +364,12 @@ async function saveDept() {
     const id = document.getElementById('d_id').value;
     const payload = { department_name: document.getElementById('d_name').value };
     if (id !== '') payload.department_id = id;
-    
+
     try {
         const res = await fetch('php/admin/departments.php', { method: id ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         const data = await res.json();
         if (res.ok) { closeModal('dept-modal'); loadDepartments(); } else alert(data.error);
-    } catch(e) { alert(e); }
+    } catch (e) { alert(e); }
 }
 
 async function deleteDept(id) {
@@ -381,9 +385,9 @@ async function loadOfferings() {
         const data = await res.json();
         if (res.ok) {
             const list = document.getElementById('offering-list-container');
-            if(data.length === 0) { list.innerHTML = '<p>No offerings found.</p>'; return; }
+            if (data.length === 0) { list.innerHTML = '<p>No offerings found.</p>'; return; }
             let html = `<table class="table table-bordered table-striped table-hover align-middle">
-                <thead class="table-light"><tr><th>Offering ID</th><th>Course ID</th><th>Semester/Batch</th><th>Instructor</th><th>Actions</th></tr></thead><tbody>`;
+                <thead class="table-light"><tr><th>ID</th><th>Course</th><th>Semester</th><th>Instructor</th><th>Actions</th></tr></thead><tbody>`;
             data.forEach(o => {
                 html += `<tr>
                     <td>${o.offering_id}</td>
@@ -398,7 +402,7 @@ async function loadOfferings() {
             });
             list.innerHTML = html + `</tbody></table>`;
         }
-    } catch(e) { console.error(e); }
+    } catch (e) { console.error(e); }
 }
 
 function populateOfferingDropdowns() {
@@ -438,18 +442,18 @@ function editOffering(dataJSON) {
 
 async function saveOffering() {
     const id = document.getElementById('o_id').value;
-    const payload = { 
+    const payload = {
         course_id: document.getElementById('o_course').value,
         semester: document.getElementById('o_semester').value,
         instructor_id: document.getElementById('o_instructor').value
     };
     if (id !== '') payload.offering_id = id;
-    
+
     try {
         const res = await fetch('php/admin/offerings.php', { method: id ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         const data = await res.json();
         if (res.ok) { closeModal('offering-modal'); loadOfferings(); } else alert(data.error);
-    } catch(e) { alert(e); }
+    } catch (e) { alert(e); }
 }
 
 async function deleteOffering(id) {
@@ -463,13 +467,13 @@ async function loadDashboardStats() {
         const res = await fetch('php/admin/dashboard_stats.php');
         if (res.status === 401) return;
         const data = await res.json();
-        
+
         if (res.ok) {
             document.getElementById('stat-students').innerText = data.total_students;
             document.getElementById('stat-courses').innerText = data.total_courses;
             document.getElementById('stat-instructors').innerText = data.total_instructors;
         }
-    } catch(e) { console.error(e); }
+    } catch (e) { console.error(e); }
 }
 
 function openNoticeModal() {
@@ -480,10 +484,10 @@ function openNoticeModal() {
     }
     const titleInput = document.getElementById('n_title');
     const contentInput = document.getElementById('n_content');
-    
+
     if (titleInput) titleInput.value = '';
     if (contentInput) contentInput.value = '';
-    
+
     modal.style.display = 'flex';
 }
 
@@ -548,6 +552,88 @@ async function deleteNotice(id) {
         if (res.ok) loadNotices();
     } catch (e) { alert(e); }
 }
+
+/* ================= REGISTRATION LIMITS ================= */
+async function loadLimits() {
+    try {
+        const res = await fetch('php/admin/registration_limits.php');
+        const data = await res.json();
+        if (res.ok) {
+            const list = document.getElementById('limit-list-container');
+            if (data.length === 0) { list.innerHTML = '<p>No registration limits set.</p>'; return; }
+            let html = `<table class="table table-bordered table-striped table-hover align-middle">
+                <thead class="table-light"><tr><th>Batch</th><th>Semester</th><th>Max Courses</th><th>Actions</th></tr></thead><tbody>`;
+            data.forEach(l => {
+                html += `<tr>
+                    <td><strong>${l.batch}</strong></td>
+                    <td>Semester ${l.semester}</td>
+                    <td><span class="badge bg-primary fs-6">${l.max_courses}</span></td>
+                    <td>
+                        <button onclick="editLimit('${escapeHtml(l)}')" class="btn btn-warning btn-sm me-1"><i class="bi bi-pencil-square"></i> Edit</button>
+                        <button onclick="deleteLimit(${l.id})" class="btn btn-danger btn-sm"><i class="bi bi-trash"></i> Delete</button>
+                    </td>
+                </tr>`;
+            });
+            list.innerHTML = html + `</tbody></table>`;
+        }
+    } catch (e) { console.error(e); }
+}
+
+function openLimitModal() {
+    document.getElementById('l-modal-title').innerText = 'Set Registration Limit';
+    document.getElementById('l_id').value = '';
+    document.getElementById('l_batch').value = '2024';
+    document.getElementById('l_semester').value = '1';
+    document.getElementById('l_max').value = '5';
+    document.getElementById('limit-modal').style.display = 'flex';
+}
+
+function editLimit(dataJSON) {
+    const l = JSON.parse(dataJSON);
+    document.getElementById('l-modal-title').innerText = 'Edit Registration Limit';
+    document.getElementById('l_id').value = l.id;
+    document.getElementById('l_batch').value = l.batch;
+    document.getElementById('l_semester').value = l.semester;
+    document.getElementById('l_max').value = l.max_courses;
+    document.getElementById('limit-modal').style.display = 'flex';
+}
+
+async function saveLimit() {
+    const id = document.getElementById('l_id').value;
+    const payload = {
+        batch: document.getElementById('l_batch').value,
+        semester: document.getElementById('l_semester').value,
+        max_courses: document.getElementById('l_max').value
+    };
+    if (id !== '') payload.id = id;
+
+    try {
+        const res = await fetch('php/admin/registration_limits.php', {
+            method: id ? 'PUT' : 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.ok) { closeModal('limit-modal'); loadLimits(); } else alert(data.error);
+    } catch (e) { alert(e); }
+}
+
+async function deleteLimit(id) {
+    if (!confirm('Delete this registration limit?')) return;
+    const res = await fetch('php/admin/registration_limits.php', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: id })
+    });
+    if (res.ok) loadLimits(); else alert((await res.json()).error);
+}
+
+// Update switchTab to load limits when selected
+const originalSwitchTab = switchTab;
+switchTab = function (tabName) {
+    originalSwitchTab(tabName);
+    if (tabName === 'limits') loadLimits();
+};
 
 // Initialization calls
 loadCourses();

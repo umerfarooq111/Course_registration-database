@@ -8,15 +8,16 @@ header('Content-Type: application/json; charset=utf-8');
 
 try {
     if ($method === 'GET') {
-        $query = "SELECT o.offering_id, o.course_id, o.semester, c.title,
+        $stmt = $conn->prepare("SELECT o.offering_id, o.course_id, o.semester, c.title,
                   cs.instructor_id, i.instructor_name
                   FROM Course_Offering o
                   JOIN Course c ON o.course_id = c.course_id
                   LEFT JOIN Course_Section cs ON c.course_id = cs.course_id
                   LEFT JOIN Instructor i ON cs.instructor_id = i.instructor_id
                   GROUP BY o.offering_id
-                  ORDER BY o.semester ASC, o.course_id ASC";
-        $res = $conn->query($query);
+                  ORDER BY o.semester ASC, o.course_id ASC");
+        $stmt->execute();
+        $res = $stmt->get_result();
         $offerings = [];
         while ($row = $res->fetch_assoc()) {
             $offerings[] = $row;
@@ -29,17 +30,25 @@ try {
         $semester = intval($data['semester'] ?? 0);
         $instructor_id = intval($data['instructor_id'] ?? 0);
         
-        if ($course_id <= 0 || $semester <= 0 || $instructor_id <= 0) {
-            send_json(['error' => 'Invalid or missing offering data. Please select valid Course and Instructor.'], 400);
+        if ($course_id <= 0 || $semester < 1 || $semester > 10 || $instructor_id <= 0) {
+            send_json(['error' => 'Invalid or missing data. Semester must be 1-10, valid Course and Instructor required.'], 400);
         }
 
         // Validate course
-        $res = $conn->query("SELECT course_id FROM Course WHERE course_id = $course_id");
+        $stmt = $conn->prepare("SELECT course_id FROM Course WHERE course_id = ?");
+        $stmt->bind_param('i', $course_id);
+        $stmt->execute();
+        $res = $stmt->get_result();
         if ($res->num_rows === 0) send_json(['error' => 'The selected course does not exist.'], 400);
+        $stmt->close();
 
         // Validate instructor
-        $res = $conn->query("SELECT instructor_id FROM Instructor WHERE instructor_id = $instructor_id");
+        $stmt = $conn->prepare("SELECT instructor_id FROM Instructor WHERE instructor_id = ?");
+        $stmt->bind_param('i', $instructor_id);
+        $stmt->execute();
+        $res = $stmt->get_result();
         if ($res->num_rows === 0) send_json(['error' => 'The selected instructor does not exist.'], 400);
+        $stmt->close();
 
         $conn->begin_transaction();
 
@@ -64,17 +73,25 @@ try {
         $semester = intval($data['semester'] ?? 0);
         $instructor_id = intval($data['instructor_id'] ?? 0);
 
-        if ($offering_id <= 0 || $course_id <= 0 || $semester <= 0 || $instructor_id <= 0) {
-            send_json(['error' => 'Invalid or missing update data. Please select valid Course and Instructor.'], 400);
+        if ($offering_id <= 0 || $course_id <= 0 || $semester < 1 || $semester > 10 || $instructor_id <= 0) {
+            send_json(['error' => 'Invalid or missing data. Semester must be 1-10, valid Course and Instructor required.'], 400);
         }
 
         // Validate course
-        $res = $conn->query("SELECT course_id FROM Course WHERE course_id = $course_id");
+        $stmt = $conn->prepare("SELECT course_id FROM Course WHERE course_id = ?");
+        $stmt->bind_param('i', $course_id);
+        $stmt->execute();
+        $res = $stmt->get_result();
         if ($res->num_rows === 0) send_json(['error' => 'The selected course does not exist.'], 400);
+        $stmt->close();
 
         // Validate instructor
-        $res = $conn->query("SELECT instructor_id FROM Instructor WHERE instructor_id = $instructor_id");
+        $stmt = $conn->prepare("SELECT instructor_id FROM Instructor WHERE instructor_id = ?");
+        $stmt->bind_param('i', $instructor_id);
+        $stmt->execute();
+        $res = $stmt->get_result();
         if ($res->num_rows === 0) send_json(['error' => 'The selected instructor does not exist.'], 400);
+        $stmt->close();
 
         $conn->begin_transaction();
 
@@ -84,7 +101,10 @@ try {
         $stmt->close();
 
         // Update Course_Section (create if not exists)
-        $res = $conn->query("SELECT section_id FROM Course_Section WHERE course_id = $course_id LIMIT 1");
+        $stmt = $conn->prepare("SELECT section_id FROM Course_Section WHERE course_id = ? LIMIT 1");
+        $stmt->bind_param('i', $course_id);
+        $stmt->execute();
+        $res = $stmt->get_result();
         if ($row = $res->fetch_assoc()) {
             $section_id = $row['section_id'];
             $stmt = $conn->prepare('UPDATE Course_Section SET instructor_id = ? WHERE section_id = ?');

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,11 +13,13 @@
         body {
             background-color: #f4f6f9;
         }
+
         .sidebar {
             min-height: 100vh;
             background-color: #2c3e50;
             color: #fff;
         }
+
         .sidebar a {
             color: #cbd5e1;
             text-decoration: none;
@@ -25,33 +28,42 @@
             font-size: 1.05rem;
             transition: all 0.3s;
         }
-        .sidebar a:hover, .sidebar a.active {
+
+        .sidebar a:hover,
+        .sidebar a.active {
             color: #fff;
             background-color: #34495e;
             border-left: 4px solid #3498db;
         }
+
         .card-summary {
             border-left: 4px solid #3498db;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
             border-radius: 8px;
         }
+
         .card-detail {
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
             border: none;
             border-radius: 8px;
         }
     </style>
 </head>
+
 <body>
     <div class="d-flex">
         <!-- Sidebar -->
         <div class="sidebar d-flex flex-column py-4" style="width: 260px; flex-shrink: 0;">
-            <h4 class="text-center mb-4 border-bottom pb-3 border-secondary fw-bold" style="letter-spacing: 1px;">STUDENT PORTAL</h4>
-            <a href="#" class="active" onclick="switchSection('dashboard', this)"><i class="bi bi-speedometer2 me-3"></i>Dashboard</a>
-            <a href="#" onclick="switchSection('registration', this)"><i class="bi bi-journal-plus me-3"></i>Course Registration</a>
+            <h4 class="text-center mb-4 border-bottom pb-3 border-secondary fw-bold" style="letter-spacing: 1px;">
+                STUDENT PORTAL</h4>
+            <a href="#" class="active" onclick="switchSection('dashboard', this)"><i
+                    class="bi bi-speedometer2 me-3"></i>Dashboard</a>
+            <a href="#" onclick="switchSection('registration', this)"><i class="bi bi-journal-plus me-3"></i>Course
+                Registration</a>
             <a href="#" onclick="switchSection('my-courses', this)"><i class="bi bi-book me-3"></i>My Courses</a>
             <div class="mt-auto">
-                <a href="#" onclick="logout()" class="text-danger fw-bold"><i class="bi bi-box-arrow-right me-3"></i>Logout</a>
+                <a href="#" onclick="logout()" class="text-danger fw-bold"><i
+                        class="bi bi-box-arrow-right me-3"></i>Logout</a>
             </div>
         </div>
 
@@ -60,7 +72,8 @@
             <!-- Student Profile Summary -->
             <div class="card card-detail mb-4">
                 <div class="card-body d-flex align-items-center p-4">
-                    <div class="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center me-4 shadow-sm" style="width: 70px; height: 70px; font-size: 2rem;">
+                    <div class="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center me-4 shadow-sm"
+                        style="width: 70px; height: 70px; font-size: 2rem;">
                         <i class="bi bi-person"></i>
                     </div>
                     <div class="flex-grow-1">
@@ -69,7 +82,8 @@
                     </div>
                     <div class="text-end">
                         <span id="st-status" class="badge bg-success fs-6 mb-2 px-3 py-2">ACTIVE</span>
-                        <p class="mb-0 text-muted" style="font-size: 1.1rem;">Semester: <strong id="st-semester" class="text-dark">1</strong></p>
+                        <p class="mb-0 text-muted" style="font-size: 1.1rem;">Semester: <strong id="st-semester"
+                                class="text-dark">1</strong></p>
                     </div>
                 </div>
             </div>
@@ -80,10 +94,11 @@
                 <section id="sec-dashboard">
                     <h3 class="mb-4 fw-bold text-secondary">Overview</h3>
                     <div class="row g-4 mb-4">
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="card card-summary h-100 py-2">
                                 <div class="card-body">
-                                    <h6 class="card-title text-muted text-uppercase fw-bold mb-3">Registered Courses</h6>
+                                    <h6 class="card-title text-muted text-uppercase fw-bold mb-3">Registered Courses
+                                    </h6>
                                     <div class="d-flex align-items-center">
                                         <div class="display-5 fw-bold text-dark me-3" id="sum-courses">0</div>
                                         <i class="bi bi-journals fs-1 text-primary opacity-50 ms-auto"></i>
@@ -91,10 +106,11 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="card card-summary h-100 py-2" style="border-left-color: #2ecc71;">
                                 <div class="card-body">
-                                    <h6 class="card-title text-muted text-uppercase fw-bold mb-3">Total Credits</h6>
+                                    <h6 class="card-title text-muted text-uppercase fw-bold mb-3">Total Credits
+                                        Completed</h6>
                                     <div class="d-flex align-items-center">
                                         <div class="display-5 fw-bold text-dark me-3" id="sum-credits">0</div>
                                         <i class="bi bi-clock-history fs-1 text-success opacity-50 ms-auto"></i>
@@ -102,13 +118,24 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="card card-summary h-100 py-2" style="border-left-color: #f39c12;">
                                 <div class="card-body">
                                     <h6 class="card-title text-muted text-uppercase fw-bold mb-3">CGPA</h6>
                                     <div class="d-flex align-items-center">
                                         <div class="display-5 fw-bold text-dark me-3" id="sum-cgpa">0.00</div>
                                         <i class="bi bi-award fs-1 text-warning opacity-50 ms-auto"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card card-summary h-100 py-2" style="border-left-color: #e74c3c;">
+                                <div class="card-body">
+                                    <h6 class="card-title text-muted text-uppercase fw-bold mb-3">Reg. Limit</h6>
+                                    <div class="d-flex align-items-center">
+                                        <div class="display-5 fw-bold text-dark me-3"><span id="sum-reg-count">0</span>/<span id="sum-reg-limit">0</span></div>
+                                        <i class="bi bi-shield-lock fs-1 text-danger opacity-50 ms-auto"></i>
                                     </div>
                                 </div>
                             </div>
@@ -124,7 +151,8 @@
 
                 <!-- Course Registration Section -->
                 <section id="sec-registration" style="display: none;">
-                    <h3 class="mb-4 fw-bold text-secondary">Available Courses <span class="badge bg-primary ms-2 fs-6">Semester <span id="reg-semester">1</span></span></h3>
+                    <h3 class="mb-4 fw-bold text-secondary">Available Courses <span
+                            class="badge bg-primary ms-2 fs-6">Semester <span id="reg-semester">1</span></span></h3>
                     <div class="card card-detail">
                         <div class="card-body p-0 table-responsive" id="courses">
                             <div class="p-5 text-center text-muted">Loading available courses...</div>
@@ -152,11 +180,11 @@
         function switchSection(sectionId, element) {
             document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active'));
             element.classList.add('active');
-            
+
             document.getElementById('sec-dashboard').style.display = 'none';
             document.getElementById('sec-registration').style.display = 'none';
             document.getElementById('sec-my-courses').style.display = 'none';
-            
+
             document.getElementById('sec-' + sectionId).style.display = 'block';
         }
 
@@ -168,4 +196,5 @@
         }
     </script>
 </body>
+
 </html>

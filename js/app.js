@@ -1,5 +1,6 @@
 let courses = [];
 let enrolledCourses = [];
+let studentProfile = null;
 
 function getApiUrl(path) {
     if (window.location.protocol === 'file:') {
@@ -81,8 +82,11 @@ function renderCourses() {
         // Check if already registered
         const isEnrolled = enrolledCourses.some(e => e.id === course.id && e.status === 'REGISTERED');
         const isFull = course.enrolled >= course.capacity;
-        let btnDisabled = isEnrolled || isFull ? 'disabled' : '';
-        let btnText = isEnrolled ? 'Enrolled' : (isFull ? 'Full' : 'Register');
+        const limitReached = studentProfile && studentProfile.current_registrations >= studentProfile.registration_limit;
+
+        let btnDisabled = isEnrolled || isFull || limitReached ? 'disabled' : '';
+        let btnText = isEnrolled ? 'Enrolled' : (isFull ? 'Full' : (limitReached ? 'Limit Reached' : 'Register'));
+        let btnClass = isEnrolled ? 'btn-secondary' : (isFull ? 'btn-secondary' : (limitReached ? 'btn-danger' : 'btn-primary'));
 
         return `
                     <tr>
@@ -93,7 +97,7 @@ function renderCourses() {
                         <td>${course.credits}</td>
                         <td>${course.capacity - course.enrolled}</td>
                         <td>
-                            <button class="btn ${btnDisabled ? 'btn-secondary' : 'btn-primary'} btn-sm" onclick="enroll(${course.id})" ${btnDisabled}>
+                            <button class="btn ${btnClass} btn-sm" onclick="enroll(${course.id})" ${btnDisabled}>
                                 ${btnText}
                             </button>
                         </td>
@@ -198,26 +202,31 @@ async function loadProfile() {
         const response = await fetch(getApiUrl('php/student/get_profile.php'));
         if (response.ok) {
             const data = await response.json();
+            studentProfile = data;
             document.getElementById('st-name').innerText = data.name;
             document.getElementById('st-email').innerText = data.email;
             document.getElementById('st-semester').innerText = data.semester;
             document.getElementById('reg-semester').innerText = data.semester;
             document.getElementById('st-status').innerText = data.status;
-            
+
             // Set Badge Color based on status
             const badge = document.getElementById('st-status');
             badge.className = 'badge fs-6 mb-2 px-3 py-2';
-            if(data.status === 'CURRENT') badge.classList.add('bg-success');
-            else if(data.status === 'DROPPED') badge.classList.add('bg-danger');
-            else if(data.status === 'GRADUATED') badge.classList.add('bg-primary');
+            if (data.status === 'CURRENT') badge.classList.add('bg-success');
+            else if (data.status === 'DROPPED') badge.classList.add('bg-danger');
+            else if (data.status === 'GRADUATED') badge.classList.add('bg-primary');
             else badge.classList.add('bg-secondary');
-            
+
             document.getElementById('sum-cgpa').innerText = data.cgpa || '0.00';
-            
+
+            // Registration Limit Data
+            document.getElementById('sum-reg-count').innerText = data.current_registrations || 0;
+            document.getElementById('sum-reg-limit').innerText = data.registration_limit || 5;
+
             // Re-calculate registered courses and credits
             const activeEnrolled = enrolledCourses.filter(c => c.status === 'REGISTERED');
             document.getElementById('sum-courses').innerText = activeEnrolled.length;
-            
+
             const totalCredits = activeEnrolled.reduce((sum, course) => sum + course.credits, 0);
             document.getElementById('sum-credits').innerText = totalCredits + parseInt(data.credits_completed || 0);
         }
@@ -228,7 +237,7 @@ async function loadProfile() {
 
 // Intercept loads to update profile too
 const origLoadEnrolled = loadEnrolledCourses;
-loadEnrolledCourses = async function() {
+loadEnrolledCourses = async function () {
     await origLoadEnrolled();
     await loadProfile();
 };

@@ -36,6 +36,45 @@ try {
         throw new Exception('This section is full.');
     }
 
+    // --- REGISTRATION LIMIT CHECK ---
+    // 1. Get Student's current Batch and Semester
+    $stuStmt = $conn->prepare('SELECT batch, semester FROM Student WHERE student_id = ?');
+    $stuStmt->bind_param('i', $studentId);
+    $stuStmt->execute();
+    $studentData = $stuStmt->get_result()->fetch_assoc();
+    $stuStmt->close();
+
+    if (!$studentData) throw new Exception('Student data not found.');
+
+    $batch = $studentData['batch'];
+    $studentSemester = $studentData['semester'];
+
+    // 2. Get the Limit for this Batch/Semester
+    $limitStmt = $conn->prepare('SELECT max_courses FROM Registration_Limits WHERE batch = ? AND semester = ?');
+    $limitStmt->bind_param('ii', $batch, $studentSemester);
+    $limitStmt->execute();
+    $limitResult = $limitStmt->get_result()->fetch_assoc();
+    $limitStmt->close();
+
+    $maxAllowed = $limitResult ? $limitResult['max_courses'] : 5; // Default to 5 if no limit set
+
+    // 3. Count current active registrations for this student
+    // We count all courses where status is REGISTERED and no grade is assigned yet (NULL or empty)
+    $countStmt = $conn->prepare('
+        SELECT COUNT(*) as reg_count 
+        FROM Registration
+        WHERE student_id = ? AND status = "REGISTERED" AND (grade IS NULL OR grade = "")
+    ');
+    $countStmt->bind_param('i', $studentId);
+    $countStmt->execute();
+    $regCount = $countStmt->get_result()->fetch_assoc()['reg_count'];
+    $countStmt->close();
+
+    if ($regCount >= $maxAllowed) {
+        throw new Exception("Registration limit reached. Your current limit is $maxAllowed courses.");
+    }
+    // --- END LIMIT CHECK ---
+
     $existing = $conn->prepare(
         'SELECT registration_id, status FROM Registration WHERE student_id = ? AND section_id = ? FOR UPDATE'
     );

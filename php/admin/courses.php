@@ -8,12 +8,13 @@ header('Content-Type: application/json; charset=utf-8');
 
 try {
     if ($method === 'GET') {
-        $query = "SELECT c.course_id, c.title, c.credit_hr, c.max_capacity, d.department_name, c.department_id, c.course_type, 
+        $stmt = $conn->prepare("SELECT c.course_id, c.title, c.credit_hr, c.max_capacity, d.department_name, c.department_id, c.course_type, 
                   (SELECT required_course_id FROM Pre_Requisite WHERE course_id = c.course_id LIMIT 1) AS prereq_id
                   FROM Course c
                   LEFT JOIN Department d ON c.department_id = d.department_id
-                  ORDER BY c.course_id ASC";
-        $res = $conn->query($query);
+                  ORDER BY c.course_id ASC");
+        $stmt->execute();
+        $res = $stmt->get_result();
         $courses = [];
         while ($row = $res->fetch_assoc()) {
             $courses[] = $row;

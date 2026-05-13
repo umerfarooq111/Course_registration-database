@@ -9,7 +9,9 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 try {
     if ($method === 'GET') {
-        $res = $conn->query("SELECT * FROM Notices ORDER BY created_at DESC");
+        $stmt = $conn->prepare("SELECT * FROM Notices ORDER BY created_at DESC");
+        $stmt->execute();
+        $res = $stmt->get_result();
         $notices = [];
         while ($row = $res->fetch_assoc()) {
             $notices[] = $row;

@@ -5,6 +5,15 @@ require_once __DIR__ . '/helpers.php';
 try {
     $conn = db_connect();
 
+    $student_id = require_student_session();
+    
+    // Get student's semester
+    $stuStmt = $conn->prepare("SELECT semester FROM Student WHERE student_id = ?");
+    $stuStmt->bind_param('i', $student_id);
+    $stuStmt->execute();
+    $studentSemester = $stuStmt->get_result()->fetch_assoc()['semester'] ?? 1;
+    $stuStmt->close();
+
     $query = "
         SELECT cs.section_id,
                c.course_id,
@@ -16,10 +25,15 @@ try {
                COALESCE(i.instructor_name, 'TBA') AS instructor_name
         FROM Course_Section cs
         JOIN Course c ON cs.course_id = c.course_id
+        JOIN Course_Offering co ON c.course_id = co.course_id
         LEFT JOIN Instructor i ON cs.instructor_id = i.instructor_id
+        WHERE co.semester = ?
         ORDER BY c.title, cs.section_id
     ";
-    $result = $conn->query($query);
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param('i', $studentSemester);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
     $sections = [];
     $courseIds = [];
