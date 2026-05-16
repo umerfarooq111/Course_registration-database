@@ -1,6 +1,7 @@
 # Course Registration & University Management System
 # UMER FAROOQ (23P-0039) & MUHAMMAD IMRAN (23P-0683) 
 
+https://github.com/umerfarooq111/Course_registration-database
 A comprehensive, web-based platform designed to streamline university operations, from course scheduling and instructor management to student enrollment and academic tracking. This system provides a robust interface for both administrators and students.
 
 ---
