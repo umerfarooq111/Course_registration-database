@@ -20,29 +20,34 @@ if (isset($_GET['error'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Course Registration</title>
-    <link rel="stylesheet" href="css/styles.css">
+    <title>Student Login | Course Registration</title>
+    <link rel="stylesheet" href="css/auth.css">
 </head>
-<body class="login-page">
-    <div class="login-container">
-        <h2 style="text-align: center; margin-bottom: 30px;">Student Login</h2>
+<body class="auth-body">
+    <div class="login-wrapper">
+        <div class="login-header">
+            <h2>Student Login</h2>
+            <p>Please enter your credentials to access the portal</p>
+        </div>
         
         <?php if ($error): ?>
-            <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
+            <div class="alert alert-danger">
+                <?php echo htmlspecialchars($error); ?>
+            </div>
         <?php endif; ?>
 
         <form action="php/auth/login.php" method="POST">
             <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email" id="email" name="email" class="form-control" placeholder="Enter your email" required autofocus>
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" class="form-control" placeholder="name@student.edu" required autofocus>
             </div>
             
             <div class="form-group">
                 <label for="password">Password</label>
-                <input type="password" id="password" name="password" class="form-control" placeholder="Enter your password" required>
+                <input type="password" id="password" name="password" class="form-control" placeholder="••••••••" required>
             </div>
             
-            <button type="submit" class="btn-login">Submit</button>
+            <button type="submit" class="btn-login">Sign In</button>
         </form>
     </div>
 </body>
